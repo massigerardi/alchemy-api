@@ -13,7 +13,7 @@ import (
 const usdcCode = "0x608060405260043610"
 const eoaCode = "0x"
 
-const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
+const apiKey = ""
 
 type mockClient struct {
 	jsonrpc.RPCClient
