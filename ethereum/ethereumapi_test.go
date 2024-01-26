@@ -1,65 +1,19 @@
 package ethereum
 
 import (
-	"context"
-	"fmt"
+	"encoding/json"
 	"math/big"
 	"reflect"
 	"testing"
 
+	"alchemy-api/mocks"
 	"github.com/ybbus/jsonrpc/v3"
 )
 
 const usdcCode = "0x608060405260043610"
 const eoaCode = "0x"
 
-const apiKey = ""
-
-type mockClient struct {
-	jsonrpc.RPCClient
-}
-
-func (m mockClient) Call(_ context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
-	if method == EthBlockNumber {
-		return &jsonrpc.RPCResponse{Result: "0x1234"}, nil
-	}
-	if method == EthGetCode {
-		address := params[0].([]interface{})[0]
-		switch address {
-		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-			return &jsonrpc.RPCResponse{Result: eoaCode}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
-			return &jsonrpc.RPCResponse{Result: eoaCode}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-			return &jsonrpc.RPCResponse{Result: usdcCode}, nil
-		default:
-			return &jsonrpc.RPCResponse{Result: ""}, nil
-		}
-	}
-	if method == EthGetBalance {
-		address := params[0].([]interface{})[0]
-		switch address {
-		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-			return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-			return &jsonrpc.RPCResponse{Result: ""}, nil
-		default:
-			return &jsonrpc.RPCResponse{Result: "0x0"}, nil
-		}
-	}
-	return nil, fmt.Errorf("method not supported")
-}
-
-func (m mockClient) CallBatch(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
-	return jsonrpc.RPCResponses{
-		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 1, Result: eoaCode, Error: nil},
-		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 2, Result: usdcCode, Error: nil},
-	}, nil
-}
-
-func getMockClient() jsonrpc.RPCClient {
-	return mockClient{}
-}
+const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
 
 func TestEthClient_BlockNumber(t *testing.T) {
 
@@ -68,7 +22,7 @@ func TestEthClient_BlockNumber(t *testing.T) {
 		client jsonrpc.RPCClient
 		want   string
 	}{
-		{"Test Block", getMockClient(), "0x1234"},
+		{"Test Block", mocks.GetMockClient(), "0x1234"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,10 +80,10 @@ func TestEthClient_GetContractCode(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{name: "Not Contract Result", fields: fields{client: getMockClient()}, args: args{address: "0x549c660ce2b988f588769d6ad87be801695b2be3"}, want: eoaCode, wantErr: false},
-		{name: "USDC Contract Result", fields: fields{client: getMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"}, want: usdcCode, wantErr: false},
-		{name: "Not USDC", fields: fields{client: getMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49"}, want: "0x", wantErr: false},
-		{name: "Wrong address", fields: fields{client: getMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE360"}, want: "", wantErr: true},
+		{name: "Not Contract Result", fields: fields{client: mocks.GetMockClient()}, args: args{address: "0x549c660ce2b988f588769d6ad87be801695b2be3"}, want: eoaCode, wantErr: false},
+		{name: "USDC Contract Result", fields: fields{client: mocks.GetMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"}, want: usdcCode, wantErr: false},
+		{name: "Not USDC", fields: fields{client: mocks.GetMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49"}, want: "0x", wantErr: false},
+		{name: "Wrong address", fields: fields{client: mocks.GetMockClient()}, args: args{address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE360"}, want: "", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -143,51 +97,6 @@ func TestEthClient_GetContractCode(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("GetContractCode() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestEthClient_BatchCall(t *testing.T) {
-	type fields struct {
-		client jsonrpc.RPCClient
-	}
-	type args struct {
-		requests jsonrpc.RPCRequests
-	}
-
-	contractCodeRequests := jsonrpc.RPCRequests{
-		&jsonrpc.RPCRequest{Method: EthGetCode, Params: jsonrpc.Params("0x549c660ce2b988f588769d6ad87be801695b2be3", "latest"), ID: 1, JSONRPC: "2.0"},
-		&jsonrpc.RPCRequest{Method: EthGetCode, Params: jsonrpc.Params("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "latest"), ID: 2, JSONRPC: "2.0"},
-	}
-
-	contractCodeResults := make([]string, 2)
-	contractCodeResults[0] = eoaCode
-	contractCodeResults[1] = usdcCode
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []string
-		wantErr bool
-	}{
-		{name: "Multiple GetCode", fields: fields{client: getMockClient()}, args: args{requests: contractCodeRequests}, want: contractCodeResults},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := EthClient{
-				client: tt.fields.client,
-			}
-			got, err := c.BatchCall(tt.args.requests)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BatchCall() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			for i := range got {
-				if !reflect.DeepEqual(got[i], tt.want[i]) {
-					t.Errorf("BatchCall() \ngot[%v] = %v\n want %v", i, got[i], tt.want[i])
-				}
 			}
 		})
 	}
@@ -210,7 +119,7 @@ func TestEthClient_GetBalance(t *testing.T) {
 	}{
 		{
 			name:   "Wrong Address",
-			fields: fields{client: getMockClient()},
+			fields: fields{client: mocks.GetMockClient()},
 			args: args{
 				address:        "0x549c660ce2b988f588769d6",
 				blockNumberOpt: nil},
@@ -218,7 +127,7 @@ func TestEthClient_GetBalance(t *testing.T) {
 		},
 		{
 			name:   "Positive Balance",
-			fields: fields{client: getMockClient()},
+			fields: fields{client: mocks.GetMockClient()},
 			args: args{
 				address:        "0x549c660ce2b988f588769d6ad87be801695b2be3",
 				blockNumberOpt: nil},
@@ -226,7 +135,7 @@ func TestEthClient_GetBalance(t *testing.T) {
 		},
 		{
 			name:   "Error Balance",
-			fields: fields{client: getMockClient()},
+			fields: fields{client: mocks.GetMockClient()},
 			args: args{
 				address:        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
 				blockNumberOpt: nil},
@@ -234,7 +143,7 @@ func TestEthClient_GetBalance(t *testing.T) {
 		},
 		{
 			name:   "Zero Balance",
-			fields: fields{client: getMockClient()},
+			fields: fields{client: mocks.GetMockClient()},
 			args: args{
 				address:        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49",
 				blockNumberOpt: nil},
@@ -254,6 +163,60 @@ func TestEthClient_GetBalance(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetBalance() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEthClient_GetLogs(t *testing.T) {
+	type fields struct {
+		client jsonrpc.RPCClient
+	}
+	type args struct {
+		request LogRequest
+	}
+
+	want := make([]LogsResponse, 1)
+	err := json.Unmarshal([]byte(mocks.JS), &want)
+	if err != nil {
+
+	}
+
+	address := make([]string, 1)
+	address[0] = "0xb59f67a8bff5d8cd03f6ac17265c550ed8f33907"
+	topics := make([]string, 3)
+	topics[0] = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	topics[1] = "0x00000000000000000000000000b46c2526e227482e2ebb8f4c69e4674d262e75"
+	topics[2] = "0x00000000000000000000000054a2d42a40f51259dedd1978f6c118a0f0eff078"
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *LogsResponse
+		wantErr bool
+	}{
+		{name: "Get Logs", fields: fields{mocks.GetMockClient()}, args: args{request: NewLogRequest(address, "0x429d3b", Latest, topics...)}, want: &want[0]},
+		{name: "Get Remote Error", fields: fields{mocks.GetMockClient()}, args: args{request: NewLogRequest(address, "0x429d3b", Pending, topics...)}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := EthClient{
+				client: tt.fields.client,
+			}
+			got, err := c.GetLogs(tt.args.request)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("GetLogs() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+			} else {
+				if got == nil {
+					t.Errorf("GetLogs() got nil")
+				}
+				if tt.want != nil && !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("GetLogs() got = %v, want %v", got, tt.want)
+				}
 			}
 		})
 	}

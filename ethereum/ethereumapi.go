@@ -40,6 +40,9 @@ func getStringResponse(client jsonrpc.RPCClient, method string, params ...interf
 	if err != nil {
 		return "", err
 	}
+	if response.Error != nil {
+		return "", fmt.Errorf("remote Error: %v", response.Error.Error())
+	}
 	result, err := response.GetString()
 	if err != nil {
 		return "", err
@@ -79,7 +82,7 @@ func (c EthClient) GetBalance(address string, blockNumberOpt ...string) (*big.In
 		return nil, err
 	}
 
-	blockNumber := "latest"
+	blockNumber := Latest
 	if len(blockNumberOpt) > 0 {
 		blockNumber = blockNumberOpt[0]
 	}
@@ -95,15 +98,26 @@ func (c EthClient) GetBalance(address string, blockNumberOpt ...string) (*big.In
 	return bigint, err
 }
 
-func (c EthClient) BatchCall(requests jsonrpc.RPCRequests) ([]interface{}, error) {
-	responses, err := c.client.CallBatch(context.Background(), requests)
+func (c EthClient) GetLogs(request LogRequest) (*LogsResponse, error) {
+	for _, address := range request.Address {
+		_, err := checkEther(address)
+		if err != nil {
+			return nil, err
+		}
+	}
+	params := make([]interface{}, 1)
+	params[0] = request
+	response, err := c.client.Call(context.Background(), EthGetLogs, params)
 	if err != nil {
-		println(err)
 		return nil, err
 	}
-	results := make([]interface{}, len(responses))
-	for i, response := range responses {
-		results[i] = response.Result
+	if response.Error != nil {
+		return nil, fmt.Errorf("remote Error: %v", response.Error.Error())
 	}
-	return results, nil
+	var results []LogsResponse
+	err = response.GetObject(&results)
+	if err != nil {
+		return nil, err
+	}
+	return &results[0], nil
 }
