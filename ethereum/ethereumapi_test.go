@@ -16,6 +16,7 @@ const eoaCode = "0x"
 const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
 
 type mockClient struct {
+	jsonrpc.RPCClient
 }
 
 func (m mockClient) Call(_ context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
@@ -26,6 +27,7 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 		address := params[0].([]interface{})[0]
 		switch address {
 		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+			return &jsonrpc.RPCResponse{Result: eoaCode}, nil
 		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
 			return &jsonrpc.RPCResponse{Result: eoaCode}, nil
 		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
@@ -48,23 +50,11 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 	return nil, fmt.Errorf("method not supported")
 }
 
-func (m mockClient) CallRaw(_ context.Context, _ *jsonrpc.RPCRequest) (*jsonrpc.RPCResponse, error) {
-	panic("implement me")
-}
-
-func (m mockClient) CallFor(_ context.Context, _ interface{}, _ string, _ ...interface{}) error {
-	panic("implement me")
-}
-
 func (m mockClient) CallBatch(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
 	return jsonrpc.RPCResponses{
 		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 1, Result: eoaCode, Error: nil},
 		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 2, Result: usdcCode, Error: nil},
 	}, nil
-}
-
-func (m mockClient) CallBatchRaw(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
-	panic("implement me")
 }
 
 func getMockClient() jsonrpc.RPCClient {
