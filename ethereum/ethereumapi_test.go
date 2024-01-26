@@ -18,7 +18,7 @@ const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
 type mockClient struct {
 }
 
-func (m mockClient) Call(ctx context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
+func (m mockClient) Call(_ context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
 	if method == EthBlockNumber {
 		return &jsonrpc.RPCResponse{Result: "0x1234"}, nil
 	}
@@ -48,22 +48,22 @@ func (m mockClient) Call(ctx context.Context, method string, params ...interface
 	return nil, fmt.Errorf("method not supported")
 }
 
-func (m mockClient) CallRaw(ctx context.Context, request *jsonrpc.RPCRequest) (*jsonrpc.RPCResponse, error) {
+func (m mockClient) CallRaw(_ context.Context, _ *jsonrpc.RPCRequest) (*jsonrpc.RPCResponse, error) {
 	panic("implement me")
 }
 
-func (m mockClient) CallFor(ctx context.Context, out interface{}, method string, params ...interface{}) error {
+func (m mockClient) CallFor(_ context.Context, _ interface{}, method string, params ...interface{}) error {
 	panic("implement me")
 }
 
-func (m mockClient) CallBatch(ctx context.Context, requests jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
+func (m mockClient) CallBatch(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
 	return jsonrpc.RPCResponses{
 		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 1, Result: eoaCode, Error: nil},
 		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 2, Result: usdcCode, Error: nil},
 	}, nil
 }
 
-func (m mockClient) CallBatchRaw(ctx context.Context, requests jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
+func (m mockClient) CallBatchRaw(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
 	panic("implement me")
 }
 
@@ -194,7 +194,7 @@ func TestEthClient_BatchCall(t *testing.T) {
 				t.Errorf("BatchCall() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			for i, _ := range got {
+			for i := range got {
 				if !reflect.DeepEqual(got[i], tt.want[i]) {
 					t.Errorf("BatchCall() \ngot[%v] = %v\n want %v", i, got[i], tt.want[i])
 				}
