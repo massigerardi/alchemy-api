@@ -52,7 +52,7 @@ func (m mockClient) CallRaw(_ context.Context, _ *jsonrpc.RPCRequest) (*jsonrpc.
 	panic("implement me")
 }
 
-func (m mockClient) CallFor(_ context.Context, _ interface{}, method string, params ...interface{}) error {
+func (m mockClient) CallFor(_ context.Context, _ interface{}, _ string, _ ...interface{}) error {
 	panic("implement me")
 }
 
