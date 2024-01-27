@@ -111,24 +111,25 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 func (m mockClient) CallBatch(_ context.Context, requests jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
 	responses := make(jsonrpc.RPCResponses, len(requests))
 	for i, request := range requests {
+		id := request.ID
 		method := request.Method
 		if method == "eth_getCode" {
 			address := request.Params.([]interface{})[0].(string)
 			switch address {
 			case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-				responses[i] = &jsonrpc.RPCResponse{Result: EoaCode}
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
 			case "0x549c660ce2b988f588769d6ad87be801695b2be1":
-				responses[i] = &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
 					Code:    -123,
 					Message: "wrong Response",
 					Data:    nil,
 				}}
 			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
-				responses[i] = &jsonrpc.RPCResponse{Result: EoaCode}
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
 			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-				responses[i] = &jsonrpc.RPCResponse{Result: UsdcCode}
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: UsdcCode}
 			default:
-				responses[i] = &jsonrpc.RPCResponse{Result: ""}
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: ""}
 			}
 		}
 	}
