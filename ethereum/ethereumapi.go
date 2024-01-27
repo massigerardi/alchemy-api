@@ -2,11 +2,11 @@ package ethereum
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strings"
 
+	"alchemy-api/utils"
 	"github.com/ybbus/jsonrpc/v3"
 )
 
@@ -24,15 +24,6 @@ func getRpcClient(apiKey string) jsonrpc.RPCClient {
 	url.WriteString(BaseApiUrl)
 	url.WriteString(apiKey)
 	return jsonrpc.NewClient(url.String())
-}
-
-func checkEther(s string) (bool, error) {
-	s = strings.TrimPrefix(s, "0x")
-	_, err := hex.DecodeString(s)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func getStringResponse(client jsonrpc.RPCClient, method string, params ...interface{}) (string, error) {
@@ -63,12 +54,12 @@ func (c EthClient) GetBlockNumber() (string, error) {
 }
 
 func (c EthClient) GetContractCode(address string, blockNumberOpt ...string) (string, error) {
-	_, err := checkEther(address)
-	if err != nil {
-		return "", err
+	isValid := utils.CheckAddress(address)
+	if !isValid {
+		return "", fmt.Errorf("invalid address %v", address)
 	}
 
-	blockNumber := "latest"
+	blockNumber := Latest
 	if len(blockNumberOpt) > 0 {
 		blockNumber = blockNumberOpt[0]
 	}
@@ -77,9 +68,9 @@ func (c EthClient) GetContractCode(address string, blockNumberOpt ...string) (st
 }
 
 func (c EthClient) GetBalance(address string, blockNumberOpt ...string) (*big.Int, error) {
-	_, err := checkEther(address)
-	if err != nil {
-		return nil, err
+	isValid := utils.CheckAddress(address)
+	if !isValid {
+		return nil, fmt.Errorf("invalid address %v", address)
 	}
 
 	blockNumber := Latest
@@ -100,9 +91,9 @@ func (c EthClient) GetBalance(address string, blockNumberOpt ...string) (*big.In
 
 func (c EthClient) GetLogs(request LogRequest) (*LogsResponse, error) {
 	for _, address := range request.Address {
-		_, err := checkEther(address)
-		if err != nil {
-			return nil, err
+		isValid := utils.CheckAddress(address)
+		if !isValid {
+			return nil, fmt.Errorf("invalid address %v", address)
 		}
 	}
 	params := make([]interface{}, 1)

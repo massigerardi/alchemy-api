@@ -25,6 +25,13 @@ func NewLogRequest(address []string, fromBlock string, toBlock string, topics ..
 	}
 }
 
+type ContractCodeResponses []*ContractCodeResponse
+type ContractCodeResponse struct {
+	Address string `json:"address"`
+	Code    string `json:"code"`
+	Error   error  `json:"error"`
+}
+
 type LogsResponses []*LogsResponse
 
 type LogsResponse struct {

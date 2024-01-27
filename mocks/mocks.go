@@ -55,6 +55,12 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 		switch address {
 		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
 			return &jsonrpc.RPCResponse{Result: EoaCode}, nil
+		case "0x549c660ce2b988f588769d6ad87be801695b2be1":
+			return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+				Code:    -123,
+				Message: "wrong Response",
+				Data:    nil,
+			}}, nil
 		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
 			return &jsonrpc.RPCResponse{Result: EoaCode}, nil
 		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
@@ -102,11 +108,31 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 	return nil, fmt.Errorf("method not supported")
 }
 
-func (m mockClient) CallBatch(_ context.Context, _ jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
-	return jsonrpc.RPCResponses{
-		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 1, Result: EoaCode, Error: nil},
-		&jsonrpc.RPCResponse{JSONRPC: "2.0", ID: 2, Result: UsdcCode, Error: nil},
-	}, nil
+func (m mockClient) CallBatch(_ context.Context, requests jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
+	responses := make(jsonrpc.RPCResponses, len(requests))
+	for i, request := range requests {
+		method := request.Method
+		if method == "eth_getCode" {
+			address := request.Params.([]interface{})[0].(string)
+			switch address {
+			case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+				responses[i] = &jsonrpc.RPCResponse{Result: EoaCode}
+			case "0x549c660ce2b988f588769d6ad87be801695b2be1":
+				responses[i] = &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+					Code:    -123,
+					Message: "wrong Response",
+					Data:    nil,
+				}}
+			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
+				responses[i] = &jsonrpc.RPCResponse{Result: EoaCode}
+			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
+				responses[i] = &jsonrpc.RPCResponse{Result: UsdcCode}
+			default:
+				responses[i] = &jsonrpc.RPCResponse{Result: ""}
+			}
+		}
+	}
+	return responses, nil
 }
 
 func GetMockClient() jsonrpc.RPCClient {

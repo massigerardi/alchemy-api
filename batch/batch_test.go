@@ -1,10 +1,8 @@
 package batch
 
 import (
-	"reflect"
 	"testing"
 
-	"alchemy-api/ethereum"
 	"alchemy-api/mocks"
 	"github.com/ybbus/jsonrpc/v3"
 )
@@ -16,8 +14,8 @@ func TestBatchCall(t *testing.T) {
 	}
 
 	contractCodeRequests := jsonrpc.RPCRequests{
-		&jsonrpc.RPCRequest{Method: ethereum.EthGetCode, Params: jsonrpc.Params("0x549c660ce2b988f588769d6ad87be801695b2be3", "latest"), ID: 1, JSONRPC: "2.0"},
-		&jsonrpc.RPCRequest{Method: ethereum.EthGetCode, Params: jsonrpc.Params("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "latest"), ID: 2, JSONRPC: "2.0"},
+		&jsonrpc.RPCRequest{Method: "eth_getCode", Params: jsonrpc.Params("0x549c660ce2b988f588769d6ad87be801695b2be3", "latest"), ID: 1, JSONRPC: "2.0"},
+		&jsonrpc.RPCRequest{Method: "eth_getCode", Params: jsonrpc.Params("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "latest"), ID: 2, JSONRPC: "2.0"},
 	}
 
 	contractCodeResults := make([]string, 2)
@@ -40,7 +38,7 @@ func TestBatchCall(t *testing.T) {
 				return
 			}
 			for i := range got {
-				if !reflect.DeepEqual(got[i], tt.want[i]) {
+				if value, _ := got[i].GetString(); value != tt.want[i] {
 					t.Errorf("DoBatchCall() \ngot[%v] = %v\n want %v", i, got[i], tt.want[i])
 				}
 			}
