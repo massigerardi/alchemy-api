@@ -26,3 +26,13 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Coverage
+      uses: gwatts/go-coverage-action@v1.3.0
+      with:
+        coverage-threshold: 80
+        cover-pkg: ./...
+        ignore-pattern: |
+          \.pb\.go$
+          \_string\.go$
+          \_test\.go$
