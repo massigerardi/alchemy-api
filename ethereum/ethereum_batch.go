@@ -1,51 +1,41 @@
 package ethereum
 
 import (
-	"fmt"
-
-	"alchemy-api/batch"
 	"alchemy-api/utils"
-	"github.com/ybbus/jsonrpc/v3"
 )
 
 func (c EthClient) GetContractCodeBatch(addresses []string, blockNumberOpt ...string) (ContractCodeResponses, error) {
-	blockNumber := Latest
-	if len(blockNumberOpt) > 0 {
-		blockNumber = blockNumberOpt[0]
-	}
-	requests := make(jsonrpc.RPCRequests, len(addresses))
-	for i, address := range addresses {
-		isValid := utils.CheckAddress(address)
-		if !isValid {
-			return nil, fmt.Errorf("invalid address %v", address)
-		}
-		requests[i] = &jsonrpc.RPCRequest{Method: EthGetCode, Params: jsonrpc.Params(addresses[i], blockNumber), ID: i, JSONRPC: "2.0"}
-	}
-	values, err := batch.DoBatchCall(c.client, requests)
+	responses, err := c.client.GetContractCodeBatchRaw(addresses, blockNumberOpt...)
 	if err != nil {
 		return nil, err
 	}
-	response := make(ContractCodeResponses, len(addresses))
-	for i, value := range values {
+	contractCodeResponses := make(ContractCodeResponses, len(addresses))
+	for i, response := range responses {
 		address := addresses[i]
-		code, codeError := extractValue(*value)
-		response[i] = &ContractCodeResponse{
+		code, codeError := utils.GetString(response)
+		contractCodeResponses[i] = &ContractCodeResponse{
 			Address: address,
 			Code:    code,
 			Error:   codeError,
 		}
 	}
-	return response, nil
+	return contractCodeResponses, nil
 }
 
-func extractValue(value jsonrpc.RPCResponse) (string, error) {
-	responseError := value.Error
-	if responseError == nil {
-		code, err := value.GetString()
-		if err != nil {
-			return "", err
-		}
-		return code, nil
+func (c EthClient) GetBalanceBatch(addresses []string, blockNumberOpt ...string) (BalanceResponses, error) {
+	responses, err := c.client.GetBalanceBatch(addresses, blockNumberOpt...)
+	if err != nil {
+		return nil, err
 	}
-	return "", fmt.Errorf(responseError.Error())
+	balanceResponses := make(BalanceResponses, len(addresses))
+	for i, response := range responses {
+		address := addresses[i]
+		amount, codeError := utils.GetBigInt(response)
+		balanceResponses[i] = &BalanceResponse{
+			Address: address,
+			Amount:  *amount,
+			Error:   codeError,
+		}
+	}
+	return balanceResponses, nil
 }

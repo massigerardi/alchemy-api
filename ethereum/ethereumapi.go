@@ -1,33 +1,22 @@
 package ethereum
 
 import (
-	"context"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"alchemy-api/utils"
-	"github.com/ybbus/jsonrpc/v3"
 )
 
-const (
-	EthBlockNumber string = "eth_blockNumber"
-	EthGetCode            = "eth_getCode"
-	EthGetBalance         = "eth_getBalance"
-	EthGetLogs            = "eth_getLogs"
-)
-
-const BaseApiUrl = "https://eth-mainnet.g.alchemy.com:443/v2/"
-
-func getRpcClient(apiKey string) jsonrpc.RPCClient {
-	url := strings.Builder{}
-	url.WriteString(BaseApiUrl)
-	url.WriteString(apiKey)
-	return jsonrpc.NewClient(url.String())
+type EthClient struct {
+	client *ETHClientRaw
 }
 
-func getStringResponse(client jsonrpc.RPCClient, method string, params ...interface{}) (string, error) {
-	response, err := client.Call(context.Background(), method, params)
+func New(apiKey string) *EthClient {
+	return &EthClient{client: NewETHClientRaw(apiKey)}
+}
+
+func (c EthClient) GetBlockNumber() (string, error) {
+	response, err := c.client.GetBlockNumberRaw()
 	if err != nil {
 		return "", err
 	}
@@ -41,64 +30,24 @@ func getStringResponse(client jsonrpc.RPCClient, method string, params ...interf
 	return result, nil
 }
 
-type EthClient struct {
-	client jsonrpc.RPCClient
-}
-
-func New(apiKey string) (*EthClient, error) {
-	return &EthClient{getRpcClient(apiKey)}, nil
-}
-
-func (c EthClient) GetBlockNumber() (string, error) {
-	return getStringResponse(c.client, EthBlockNumber)
-}
-
 func (c EthClient) GetContractCode(address string, blockNumberOpt ...string) (string, error) {
-	isValid := utils.CheckAddress(address)
-	if !isValid {
-		return "", fmt.Errorf("invalid address %v", address)
+	response, err := c.client.GetContractCodeRaw(address, blockNumberOpt...)
+	if err != nil {
+		return "", err
 	}
-
-	blockNumber := Latest
-	if len(blockNumberOpt) > 0 {
-		blockNumber = blockNumberOpt[0]
-	}
-
-	return getStringResponse(c.client, EthGetCode, address, blockNumber)
+	return utils.GetString(response)
 }
 
 func (c EthClient) GetBalance(address string, blockNumberOpt ...string) (*big.Int, error) {
-	isValid := utils.CheckAddress(address)
-	if !isValid {
-		return nil, fmt.Errorf("invalid address %v", address)
-	}
-
-	blockNumber := Latest
-	if len(blockNumberOpt) > 0 {
-		blockNumber = blockNumberOpt[0]
-	}
-	result, err := getStringResponse(c.client, EthGetBalance, address, blockNumber)
+	response, err := c.client.GetBalance(address, blockNumberOpt...)
 	if err != nil {
 		return nil, err
 	}
-	n := new(big.Int)
-	bigint, success := n.SetString(result, 0)
-	if !success {
-		return nil, fmt.Errorf("failed conversion for %v", result)
-	}
-	return bigint, err
+	return utils.GetBigInt(response)
 }
 
 func (c EthClient) GetLogs(request LogRequest) (*LogsResponse, error) {
-	for _, address := range request.Address {
-		isValid := utils.CheckAddress(address)
-		if !isValid {
-			return nil, fmt.Errorf("invalid address %v", address)
-		}
-	}
-	params := make([]interface{}, 1)
-	params[0] = request
-	response, err := c.client.Call(context.Background(), EthGetLogs, params)
+	response, err := c.client.GetLogs(request)
 	if err != nil {
 		return nil, err
 	}

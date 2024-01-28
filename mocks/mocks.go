@@ -44,14 +44,22 @@ func getMap(obj interface{}) (map[string]interface{}, error) {
 
 type mockClient struct {
 	jsonrpc.RPCClient
+	wantErr bool
 }
 
 func (m mockClient) Call(_ context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
 	if method == "eth_blockNumber" {
+		if m.wantErr {
+			return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+				Code:    -123,
+				Message: "wrong Response",
+				Data:    nil,
+			}}, nil
+		}
 		return &jsonrpc.RPCResponse{Result: "0x1234"}, nil
 	}
 	if method == "eth_getCode" {
-		address := params[0].([]interface{})[0]
+		address := params[0].(string)
 		switch address {
 		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
 			return &jsonrpc.RPCResponse{Result: EoaCode}, nil
@@ -70,12 +78,18 @@ func (m mockClient) Call(_ context.Context, method string, params ...interface{}
 		}
 	}
 	if method == "eth_getBalance" {
-		address := params[0].([]interface{})[0]
+		address := params[0].(string)
 		switch address {
 		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
 			return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
 		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
 			return &jsonrpc.RPCResponse{Result: ""}, nil
+		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB47":
+			return &jsonrpc.RPCResponse{Result: "", Error: &jsonrpc.RPCError{
+				Code:    -1234,
+				Message: "Test Error",
+				Data:    nil,
+			}}, nil
 		default:
 			return &jsonrpc.RPCResponse{Result: "0x0"}, nil
 		}
@@ -132,10 +146,30 @@ func (m mockClient) CallBatch(_ context.Context, requests jsonrpc.RPCRequests) (
 				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: ""}
 			}
 		}
+		if method == "eth_getBalance" {
+			address := request.Params.([]interface{})[0].(string)
+			switch address {
+			case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+				responses[i] = &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}
+			case "0x558FA75074cc7cF045C764aEd47D37776Ea697d1":
+				responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
+					Code:    -123,
+					Message: "wrong Response",
+					Data:    nil,
+				}}
+			case "0x558FA75074cc7cF045C764aEd47D37776Ea697d2":
+				responses[i] = &jsonrpc.RPCResponse{Result: "0x19B225CEC6808"}
+			default:
+				responses[i] = &jsonrpc.RPCResponse{Result: "0x0"}
+			}
+		}
 	}
 	return responses, nil
 }
 
-func GetMockClient() jsonrpc.RPCClient {
-	return mockClient{}
+func GetMockClient(wantErr ...bool) jsonrpc.RPCClient {
+	if len(wantErr) > 0 {
+		return mockClient{wantErr: wantErr[0]}
+	}
+	return mockClient{wantErr: false}
 }

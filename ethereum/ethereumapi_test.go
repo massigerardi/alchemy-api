@@ -16,22 +16,28 @@ const eoaCode = "0x"
 const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
 
 func TestEthClient_BlockNumber(t *testing.T) {
+	type fields struct {
+		client jsonrpc.RPCClient
+	}
 
 	tests := []struct {
-		name   string
-		client jsonrpc.RPCClient
-		want   string
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
 	}{
-		{"Test Block", mocks.GetMockClient(), "0x1234"},
+		{name: "Test Block", fields: fields{client: mocks.GetMockClient()}, want: "0x1234"},
+		{name: "Test Error", fields: fields{client: mocks.GetMockClient(true)}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := EthClient{
-				client: tt.client,
+				client: &ETHClientRaw{tt.fields.client},
 			}
 			got, err := c.GetBlockNumber()
-			if err != nil {
-				t.Errorf("Unexpected Error = %v", err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBlockNumber() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 			if got != tt.want {
 				t.Errorf("GetBlockNumber() = '%v', want '%v'", got, tt.want)
@@ -45,19 +51,14 @@ func TestNew(t *testing.T) {
 		apiKey string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name string
+		args args
 	}{
-		{name: "Test_New", args: args{apiKey: apiKey}, wantErr: false},
+		{name: "Test_New", args: args{apiKey: apiKey}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.apiKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := New(tt.args.apiKey)
 			if got == nil {
 				t.Errorf("New() got = %v", got)
 			}
@@ -88,7 +89,7 @@ func TestEthClient_GetContractCode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := EthClient{
-				client: tt.fields.client,
+				client: &ETHClientRaw{tt.fields.client},
 			}
 			got, err := c.GetContractCode(tt.args.address, tt.args.blockNumberOpt...)
 			if (err != nil) != tt.wantErr {
@@ -142,6 +143,14 @@ func TestEthClient_GetBalance(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:   "Remote Error",
+			fields: fields{client: mocks.GetMockClient()},
+			args: args{
+				address:        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB47",
+				blockNumberOpt: nil},
+			wantErr: true,
+		},
+		{
 			name:   "Zero Balance",
 			fields: fields{client: mocks.GetMockClient()},
 			args: args{
@@ -154,7 +163,7 @@ func TestEthClient_GetBalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := EthClient{
-				client: tt.fields.client,
+				client: &ETHClientRaw{tt.fields.client},
 			}
 			got, err := c.GetBalance(tt.args.address, tt.args.blockNumberOpt...)
 			if (err != nil) != tt.wantErr {
@@ -202,7 +211,7 @@ func TestEthClient_GetLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := EthClient{
-				client: tt.fields.client,
+				client: &ETHClientRaw{tt.fields.client},
 			}
 			got, err := c.GetLogs(tt.args.request)
 			if tt.wantErr {

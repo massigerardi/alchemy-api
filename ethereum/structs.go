@@ -1,5 +1,7 @@
 package ethereum
 
+import "math/big"
+
 type BlockIdentifier string
 
 const (
@@ -30,6 +32,13 @@ type ContractCodeResponse struct {
 	Address string `json:"address"`
 	Code    string `json:"code"`
 	Error   error  `json:"error"`
+}
+
+type BalanceResponses []*BalanceResponse
+type BalanceResponse struct {
+	Address string  `json:"address"`
+	Amount  big.Int `json:"amount"`
+	Error   error   `json:"error"`
 }
 
 type LogsResponses []*LogsResponse
