@@ -1,4 +1,4 @@
-module alchemy-api
+module github.com/massigerardi/alchemy-api
 
 go 1.20
 
