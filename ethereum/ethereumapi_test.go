@@ -13,8 +13,6 @@ import (
 const usdcCode = "0x608060405260043610"
 const eoaCode = "0x"
 
-const apiKey = "S0n286vv7IjOc-rbaBwu9zMsrfjd_CKs"
-
 func TestEthClient_BlockNumber(t *testing.T) {
 	type fields struct {
 		client jsonrpc.RPCClient
@@ -54,7 +52,7 @@ func TestNew(t *testing.T) {
 		name string
 		args args
 	}{
-		{name: "Test_New", args: args{apiKey: apiKey}},
+		{name: "Test_New", args: args{apiKey: "test"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
