@@ -16,6 +16,7 @@ const (
 	EthGetCode            = "eth_getCode"
 	EthGetBalance         = "eth_getBalance"
 	EthGetLogs            = "eth_getLogs"
+	EthGasPrice           = "eth_gasPrice"
 )
 
 type ETHClientRaw struct {
@@ -104,4 +105,8 @@ func (c ETHClientRaw) GetBalanceBatch(addresses []string, blockNumberOpt ...stri
 		requests[i] = &jsonrpc.RPCRequest{Method: EthGetBalance, Params: jsonrpc.Params(addresses[i], blockNumber), ID: i, JSONRPC: "2.0"}
 	}
 	return batch.DoBatchCall(c.client, requests)
+}
+
+func (c ETHClientRaw) GetGasPrice() (*jsonrpc.RPCResponse, error) {
+	return nil, fmt.Errorf("not implemented")
 }
