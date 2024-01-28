@@ -1,7 +1,7 @@
 package ethereum
 
 import (
-	"alchemy-api/utils"
+	"github.com/massigerardi/alchemy-api/utils"
 )
 
 func (c EthClient) GetContractCodeBatch(addresses []string, blockNumberOpt ...string) (ContractCodeResponses, error) {

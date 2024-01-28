@@ -4,7 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"alchemy-api/mocks"
+	"github.com/massigerardi/alchemy-api/mocks"
+
 	"github.com/ybbus/jsonrpc/v3"
 )
 

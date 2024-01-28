@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"alchemy-api/utils"
+	"github.com/massigerardi/alchemy-api/utils"
 )
 
 type EthClient struct {

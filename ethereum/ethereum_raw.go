@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"alchemy-api/batch"
-	"alchemy-api/utils"
+	"github.com/massigerardi/alchemy-api/batch"
+	"github.com/massigerardi/alchemy-api/utils"
 	"github.com/ybbus/jsonrpc/v3"
 )
 
