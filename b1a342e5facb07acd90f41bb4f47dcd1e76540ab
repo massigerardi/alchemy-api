@@ -1,0 +1,1 @@
+{"go-coverage-action-fmt":1,"coverage_pct":86.91099476439791,"pkg_stats":{"github.com/massigerardi/alchemy-api/batch":[60],"github.com/massigerardi/alchemy-api/mocks":[82.08955223880598],"github.com/massigerardi/alchemy-api/ethereum":[91],"github.com/massigerardi/alchemy-api/utils":[89.47368421052632]},"skipped_count":0}
