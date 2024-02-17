@@ -1,11 +1,11 @@
 package mocks
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
+  "context"
+  "encoding/json"
+  "fmt"
 
-	"github.com/ybbus/jsonrpc/v3"
+  "github.com/ybbus/jsonrpc/v3"
 )
 
 const JS = `[
@@ -30,146 +30,157 @@ const UsdcCode = "0x608060405260043610"
 const EoaCode = "0x"
 
 func getMap(obj interface{}) (map[string]interface{}, error) {
-	js, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-	result := make(map[string]interface{})
-	err = json.Unmarshal(js, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+  js, err := json.Marshal(obj)
+  if err != nil {
+    return nil, err
+  }
+  result := make(map[string]interface{})
+  err = json.Unmarshal(js, &result)
+  if err != nil {
+    return nil, err
+  }
+  return result, nil
 }
 
 type mockClient struct {
-	jsonrpc.RPCClient
-	wantErr bool
+  jsonrpc.RPCClient
+  wantErr bool
 }
 
 func (m mockClient) Call(_ context.Context, method string, params ...interface{}) (*jsonrpc.RPCResponse, error) {
-	if method == "eth_blockNumber" {
-		if m.wantErr {
-			return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
-				Code:    -123,
-				Message: "wrong Response",
-				Data:    nil,
-			}}, nil
-		}
-		return &jsonrpc.RPCResponse{Result: "0x1234"}, nil
-	}
-	if method == "eth_getCode" {
-		address := params[0].(string)
-		switch address {
-		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-			return &jsonrpc.RPCResponse{Result: EoaCode}, nil
-		case "0x549c660ce2b988f588769d6ad87be801695b2be1":
-			return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
-				Code:    -123,
-				Message: "wrong Response",
-				Data:    nil,
-			}}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
-			return &jsonrpc.RPCResponse{Result: EoaCode}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-			return &jsonrpc.RPCResponse{Result: UsdcCode}, nil
-		default:
-			return &jsonrpc.RPCResponse{Result: ""}, nil
-		}
-	}
-	if method == "eth_getBalance" {
-		address := params[0].(string)
-		switch address {
-		case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-			return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-			return &jsonrpc.RPCResponse{Result: ""}, nil
-		case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB47":
-			return &jsonrpc.RPCResponse{Result: "", Error: &jsonrpc.RPCError{
-				Code:    -1234,
-				Message: "Test Error",
-				Data:    nil,
-			}}, nil
-		default:
-			return &jsonrpc.RPCResponse{Result: "0x0"}, nil
-		}
-	}
-	if method == "eth_getLogs" {
-		received := params[0].([]interface{})
-		request, _ := getMap(received[0])
-		toBlock := request["toBlock"]
-		switch toBlock {
-		case "pending":
-			return &jsonrpc.RPCResponse{Result: nil, Error: &jsonrpc.RPCError{
-				Code:    -1234,
-				Message: "Test Error",
-				Data:    nil,
-			}}, nil
-		case "latest":
+  if method == "eth_blockNumber" {
+    if m.wantErr {
+      return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+        Code:    -123,
+        Message: "wrong Response",
+        Data:    nil,
+      }}, nil
+    }
+    return &jsonrpc.RPCResponse{Result: "0x1234"}, nil
+  }
+  if method == "eth_getCode" {
+    address := params[0].(string)
+    switch address {
+    case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+      return &jsonrpc.RPCResponse{Result: EoaCode}, nil
+    case "0x549c660ce2b988f588769d6ad87be801695b2be1":
+      return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+        Code:    -123,
+        Message: "wrong Response",
+        Data:    nil,
+      }}, nil
+    case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
+      return &jsonrpc.RPCResponse{Result: EoaCode}, nil
+    case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
+      return &jsonrpc.RPCResponse{Result: UsdcCode}, nil
+    default:
+      return &jsonrpc.RPCResponse{Result: ""}, nil
+    }
+  }
+  if method == "eth_getBalance" {
+    address := params[0].(string)
+    switch address {
+    case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+      return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
+    case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
+      return &jsonrpc.RPCResponse{Result: ""}, nil
+    case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB47":
+      return &jsonrpc.RPCResponse{Result: "", Error: &jsonrpc.RPCError{
+        Code:    -1234,
+        Message: "Test Error",
+        Data:    nil,
+      }}, nil
+    default:
+      return &jsonrpc.RPCResponse{Result: "0x0"}, nil
+    }
+  }
+  if method == "eth_getLogs" {
+    received := params[0].([]interface{})
+    request, _ := getMap(received[0])
+    toBlock := request["toBlock"]
+    switch toBlock {
+    case "pending":
+      return &jsonrpc.RPCResponse{Result: nil, Error: &jsonrpc.RPCError{
+        Code:    -1234,
+        Message: "Test Error",
+        Data:    nil,
+      }}, nil
+    case "latest":
 
-			result := make([]map[string]interface{}, 1)
-			err := json.Unmarshal([]byte(JS), &result)
-			if err != nil {
-				return nil, err
-			}
-			return &jsonrpc.RPCResponse{
-				Result: result,
-				Error:  nil}, nil
-		default:
-			return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
-		}
-	}
-	return nil, fmt.Errorf("method not supported")
+      result := make([]map[string]interface{}, 1)
+      err := json.Unmarshal([]byte(JS), &result)
+      if err != nil {
+        return nil, err
+      }
+      return &jsonrpc.RPCResponse{
+        Result: result,
+        Error:  nil}, nil
+    default:
+      return &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}, nil
+    }
+  }
+  if method == "eth_gasPrice" {
+    if m.wantErr {
+      return &jsonrpc.RPCResponse{Error: &jsonrpc.RPCError{
+        Code:    -123,
+        Message: "wrong Response",
+        Data:    nil,
+      }}, nil
+    }
+    return &jsonrpc.RPCResponse{Result: "0x2c138aa7c"}, nil
+  }
+
+  return nil, fmt.Errorf("method not supported")
 }
 
 func (m mockClient) CallBatch(_ context.Context, requests jsonrpc.RPCRequests) (jsonrpc.RPCResponses, error) {
-	responses := make(jsonrpc.RPCResponses, len(requests))
-	for i, request := range requests {
-		id := request.ID
-		method := request.Method
-		if method == "eth_getCode" {
-			address := request.Params.([]interface{})[0].(string)
-			switch address {
-			case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
-			case "0x549c660ce2b988f588769d6ad87be801695b2be1":
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
-					Code:    -123,
-					Message: "wrong Response",
-					Data:    nil,
-				}}
-			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
-			case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: UsdcCode}
-			default:
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Result: ""}
-			}
-		}
-		if method == "eth_getBalance" {
-			address := request.Params.([]interface{})[0].(string)
-			switch address {
-			case "0x549c660ce2b988f588769d6ad87be801695b2be3":
-				responses[i] = &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}
-			case "0x558FA75074cc7cF045C764aEd47D37776Ea697d1":
-				responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
-					Code:    -123,
-					Message: "wrong Response",
-					Data:    nil,
-				}}
-			case "0x558FA75074cc7cF045C764aEd47D37776Ea697d2":
-				responses[i] = &jsonrpc.RPCResponse{Result: "0x19B225CEC6808"}
-			default:
-				responses[i] = &jsonrpc.RPCResponse{Result: "0x0"}
-			}
-		}
-	}
-	return responses, nil
+  responses := make(jsonrpc.RPCResponses, len(requests))
+  for i, request := range requests {
+    id := request.ID
+    method := request.Method
+    if method == "eth_getCode" {
+      address := request.Params.([]interface{})[0].(string)
+      switch address {
+      case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
+      case "0x549c660ce2b988f588769d6ad87be801695b2be1":
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
+          Code:    -123,
+          Message: "wrong Response",
+          Data:    nil,
+        }}
+      case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB49":
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Result: EoaCode}
+      case "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Result: UsdcCode}
+      default:
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Result: ""}
+      }
+    }
+    if method == "eth_getBalance" {
+      address := request.Params.([]interface{})[0].(string)
+      switch address {
+      case "0x549c660ce2b988f588769d6ad87be801695b2be3":
+        responses[i] = &jsonrpc.RPCResponse{Result: "0x474a58f10b7140"}
+      case "0x558FA75074cc7cF045C764aEd47D37776Ea697d1":
+        responses[i] = &jsonrpc.RPCResponse{ID: id, Error: &jsonrpc.RPCError{
+          Code:    -123,
+          Message: "wrong Response",
+          Data:    nil,
+        }}
+      case "0x558FA75074cc7cF045C764aEd47D37776Ea697d2":
+        responses[i] = &jsonrpc.RPCResponse{Result: "0x19B225CEC6808"}
+      default:
+        responses[i] = &jsonrpc.RPCResponse{Result: "0x0"}
+      }
+    }
+  }
+  return responses, nil
 }
 
 func GetMockClient(wantErr ...bool) jsonrpc.RPCClient {
-	if len(wantErr) > 0 {
-		return mockClient{wantErr: wantErr[0]}
-	}
-	return mockClient{wantErr: false}
+  if len(wantErr) > 0 {
+    return mockClient{wantErr: wantErr[0]}
+  }
+  return mockClient{wantErr: false}
 }
